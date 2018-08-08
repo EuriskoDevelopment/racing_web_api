@@ -3,6 +3,8 @@ import argparse as ap
 from ir_webstats.client import iRWebStats
 from ir_webstats.util import *
 
+from prettytable import PrettyTable
+
 if __name__ == '__main__':
 
     parser = ap.ArgumentParser(description="Shell interface for iRWebStats")
@@ -37,15 +39,20 @@ if __name__ == '__main__':
 
 
     def print_serie(series):
+        x = PrettyTable()
+        x.field_names = ["Racing serie", "Track"]
+
         for serie in series:
             name = serie['seriesname']
             current_week = serie['raceweek']
             tracks = serie['tracks']
             if len(tracks) == 1:
                 current_week = 0
-            current_track = tracks[current_week]
-            print(name)
-            print(current_track['name'])
+            current_track = tracks[current_week]['name']
+
+            x.add_row([name, current_track])
+
+        print(x)
 
 
     print_serie(dirt_oval_serie)
