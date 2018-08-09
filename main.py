@@ -46,9 +46,7 @@ if __name__ == '__main__':
             name = serie['seriesname']
             current_week = serie['raceweek']
             tracks = serie['tracks']
-            if len(tracks) == 1:
-                current_week = 0
-            current_track = tracks[current_week]['name']
+            current_track = tracks[current_week-1]['name']
 
             x.add_row([name, current_track])
 
