@@ -56,10 +56,15 @@ if __name__ == '__main__':
             next_sessions = times['d']
 
             if len(next_sessions) == 0:
+                print("Found no sessions for {name}".format(name=name))
                 continue
 
             # Get the racing sessions.
             next_racing_sessions = [session for session in next_sessions['r'] if session['9'] == 5]
+
+            if len(next_racing_sessions) == 0:
+                print("Found no racing sessions for {name}".format(name=name))
+                continue
 
             next_session_time = next_racing_sessions[0]['6']
 
