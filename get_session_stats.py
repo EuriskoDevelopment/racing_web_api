@@ -49,17 +49,18 @@ if __name__ == '__main__':
             serie_data['serie_name'] = serie['seriesname']
             weekly_data = []
             all_data = []
+            data = {}
             for i in serie['tracks']:
                 race_week = i['raceweek']
                 series_results = irw.series_raceresults(int(serie['seasonid']), race_week)
                 #current_week = serie['raceweek']
                 #num_weeks = serie['tracks']
 
-                accum = []
+                #accum = []
                 previous_start_time = 0
                 for j in series_results:
 
-                    data = {}
+                    #data = {}
                     start_time = j['start_time']
                     field_size = j['sizeoffield']
                     #if j == 0:
@@ -69,18 +70,23 @@ if __name__ == '__main__':
                     #    previous_start_time = start_time
                     #    continue
 
-                    data['start_time'] = start_time
-                    data['field_size'] = field_size
+                    #data[start_time] += field_size
+                    #data['field_size'] = field_size
 
-                    next_sessiont_time_string = \
+                    start_time_str = \
                         datetime.datetime.fromtimestamp(start_time / 1e3).strftime('%Y-%m-%d %H:%M:%S')
-                    data['start_time_str'] = next_sessiont_time_string
-                    accum.append(data)
-                    all_data.append(data)
-                for start_time, size, _  in data:
+                    #data['start_time_str'] = next_sessiont_time_string
+                    if start_time_str in data:
+                        data[start_time_str] += field_size
+                    else:
+                        data[start_time_str] = field_size
 
-                weekly_data.append(accum)
-            serie_data['weekly_data'] = all_data
+                    #accum.append(data)
+                    #all_data.append(data)
+#                for start_time, size, _  in data:
+
+                #weekly_data.append(accum)
+            serie_data['weekly_data'] = data
             total.append(serie_data)
         return total
 
@@ -89,14 +95,19 @@ if __name__ == '__main__':
     road_serie2 = [serie for serie in season_stat if
                   serie['licenseEligible'] is True and serie['category'] == 2]
     data = get_data(road_serie2)
-    sizey = [xx['field_size'] for xx in data[0]['weekly_data']]
-    times = [xx['start_time'] for xx in data[0]['weekly_data']]
+    data2 = data[0]['weekly_data']
 
-    fig, ax = plt.subplots(figsize=(5, 3))
-    ax.stackplot(times, sizey)
-    ax.set_title('Sessions')
-    ax.legend(loc='upper left')
-    ax.set_ylabel('Field size')
+    plt.bar(range(len(data2)), list(data2.values()), align='center')
+    plt.xticks(range(len(data2)), list(data2.keys()))
+    plt.show()
+    #sizey = [xx['field_size'] for xx in data[0]['weekly_data']]
+    #times = [xx['start_time'] for xx in data[0]['weekly_data']]
+
+    #fig, ax = plt.subplots(figsize=(5, 3))
+    #ax.bar(data2.keys(), data2.values())
+    #ax.set_title('Sessions')
+    #ax.legend(loc='upper left')
+    #ax.set_ylabel('Field size')
     #ax.set_xlim(xmin=yrs[0], xmax=yrs[-1])
 
     print("Finnished")
