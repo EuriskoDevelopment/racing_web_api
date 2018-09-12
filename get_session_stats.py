@@ -4,6 +4,8 @@ import datetime
 
 import matplotlib.pyplot as plt
 from ir_webstats.client import iRWebStats
+from copy import deepcopy as dp
+import matplotlib.dates as mdates
 from ir_webstats.util import *
 
 from prettytable import PrettyTable
@@ -45,21 +47,25 @@ if __name__ == '__main__':
         for serie in road_serie:
             #if len(serie['tracks']) == 0:
             #    continue
+            print('getting data for:')
+            print(serie['seriesname'])
             serie_data = {}
             serie_data['serie_name'] = serie['seriesname']
             weekly_data = []
             all_data = []
-            data = {}
+
             for i in serie['tracks']:
+
                 race_week = i['raceweek']
                 series_results = irw.series_raceresults(int(serie['seasonid']), race_week)
                 #current_week = serie['raceweek']
                 #num_weeks = serie['tracks']
 
-                #accum = []
+                weekday_ = []
                 previous_start_time = 0
-                for j in series_results:
 
+                for j in series_results:
+                    data = {}
                     #data = {}
                     start_time = j['start_time']
                     field_size = j['sizeoffield']
@@ -73,36 +79,71 @@ if __name__ == '__main__':
                     #data[start_time] += field_size
                     #data['field_size'] = field_size
 
+                    start_time_obj = datetime.datetime.fromtimestamp(start_time / 1e3)
+                    weekday = start_time_obj.weekday()
                     start_time_str = \
                         datetime.datetime.fromtimestamp(start_time / 1e3).strftime('%Y-%m-%d %H:%M:%S')
                     #data['start_time_str'] = next_sessiont_time_string
-                    if start_time_str in data:
-                        data[start_time_str] += field_size
-                    else:
-                        data[start_time_str] = field_size
+                    datetime_week = datetime.timedelta(weeks=1)
 
-                    #accum.append(data)
+                    #print(weekday)
+                    time = start_time_obj.time()
+                    #print(time)
+
+                    data['weekday'] = weekday
+                    data['time'] = time
+                    data['field_size'] = field_size
+                    #data['num']
+                    #for kk in data:
+                        #if start_time_str == kk - datetime_week
+
+                    weekly_data.append(dp(data))
+                    #if
+                    #data3 = weekday_list[weekday]
+
+                    #if time in data3:
+                    #    data['time'] = time
+                    #    data['num'] += 1
+                    #else:
+                    #    data[time] = field_size
+                    #    data['num'] = 0
+
+                        #accum.append(data)
                     #all_data.append(data)
 #                for start_time, size, _  in data:
 
                 #weekly_data.append(accum)
-            serie_data['weekly_data'] = data
+            serie_data['weekly_data'] = weekly_data
             total.append(serie_data)
         return total
 
     season_stat = irw.all_seasons()
 
     road_serie2 = [serie for serie in season_stat if
-                  serie['licenseEligible'] is True and serie['category'] == 2]
+                  serie['licenseEligible'] is True and serie['category'] == 2] #2 is actual road
     data = get_data(road_serie2)
+    print('all data recieved. Start processing')
     data2 = data[0]['weekly_data']
+    thuesday_data_time = [time for weekday, time, field_size in data2 if weekday == 1]
+    thuesday_data_field_size = [time for weekday, time, field_size in data2 if weekday == 1]
+
+    data_set, i = set(thuesday_data_time)
+
+    #for i in range(monday_data_time):
+        #if
+
+
+
 
     plt.bar(range(len(data2)), list(data2.values()), align='center')
     plt.xticks(range(len(data2)), list(data2.keys()))
     plt.show()
     #sizey = [xx['field_size'] for xx in data[0]['weekly_data']]
     #times = [xx['start_time'] for xx in data[0]['weekly_data']]
-
+    # set ticks every week
+    #ax.xaxis.set_major_locator(mdates.WeekdayLocator())
+    # set major ticks format
+    #ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
     #fig, ax = plt.subplots(figsize=(5, 3))
     #ax.bar(data2.keys(), data2.values())
     #ax.set_title('Sessions')
