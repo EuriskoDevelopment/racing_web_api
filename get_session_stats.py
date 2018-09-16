@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     #results = irw.results_archive(irw.custid)
     x = PrettyTable()
-    x.field_names = ["Day", "Time", "Field size"]
+    x.field_names = ["Time", "Field size"]
 
     def get_data(road_serie):
         total = []
@@ -115,68 +115,58 @@ if __name__ == '__main__':
 
     season_stat = irw.all_seasons()
 
-    road_serie2 = [serie for serie in season_stat if
+    road_serie = [serie for serie in season_stat if
                   serie['licenseEligible'] is True and serie['category'] == 2] #2 is actual road
-    data = get_data(road_serie2)
+    series_data = get_data(road_serie)
     print('all data recieved. Start processing')
-    data2 = data[6]['weekly_data']
-    #thuesday_data_time = [time for weekday, time, field_size in data2]
-    #thuesday_data_field_size = [field_size.items() for weekday, time, field_size in data2]
 
-    times2 = [d['time'] for d in data2 if d['weekday'] == 2]
-    mondays = [d for d in data2 if d['weekday'] == 0]
-    thuesdays = [d for d in data2 if d['weekday'] == 1]
-    wendsdays = [d for d in data2 if d['weekday'] == 2]
-    thursdays = [d for d in data2 if d['weekday'] == 3]
-    fridays = [d for d in data2 if d['weekday'] == 4]
-    saturdays = [d for d in data2 if d['weekday'] == 5]
-    sundays = [d for d in data2 if d['weekday'] == 6]
+    # for serie_data in series_data:
+    serie_data = series_data[7]
+    weekly_data = serie_data['weekly_data']
+    print(serie_data['serie_name'])
+
+    # get all time. Using Wendsday as referance
+    times2 = [d['time'] for d in weekly_data if d['weekday'] == 2]
 
     times = set(times2)
-    pp = []
+    summed_field_size = []
     for i in range(0,7):
-        ppp = []
+        summed_field_size_per_day = []
         for time in times:
-            jj = {}
-            dd = [d for d in data2 if d['weekday'] == i and d['time'] == time]
+            field_size_per_time = {}
+            dd = [d for d in weekly_data if d['weekday'] == i and d['time'] == time]
             if len(dd) > 0:
                 kk = [oo['field_size'] for oo in dd]
                 num_field = len(kk)
-                #if num_field > 1:
-                #    print('larger than one')
                 sum_field = sum(kk)
-                #jj['weekday'] = i
-                jj['time'] = time
-                jj['avg_field'] = sum_field
-                ppp.append(jj)
-        pp.append(ppp)
+                field_size_per_time['weekday'] = i
+                field_size_per_time['time'] = time
+                field_size_per_time['avg_field'] = sum_field
+                summed_field_size_per_day.append(field_size_per_time)
+        summed_field_size.append(summed_field_size_per_day)
 
-    #print('hej')
+    #for daily_data in summed_field_size:
+    #    #daily_data = summed_field_size[i]
 
-    #sorted(pp, key=lambda x: datetime.datetime.strptime(x['time'], '%h:%m:%s'))
-    serie_2 = pp[2]
-    for races_per_day in pp:
+    for races_per_day in summed_field_size:
+        if len(races_per_day) == 0:
+            continue
         races_per_day.sort(key=lambda item: item['time'], reverse=True)
 
-    avgs_wends = [d['avg_field'] for d in pp[2]]
-    times_wends = [d['time'] for d in pp[2]]
-
-    plt.bar(range(len(times_wends)), avgs_wends, align='center')
-    plt.xticks(range(len(avgs_wends)), times_wends)
-    plt.show()
-    #sizey = [xx['field_size'] for xx in data[0]['weekly_data']]
-    #times = [xx['start_time'] for xx in data[0]['weekly_data']]
-    # set ticks every week
-    #ax.xaxis.set_major_locator(mdates.WeekdayLocator())
-    # set major ticks format
-    #ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
-    #fig, ax = plt.subplots(figsize=(5, 3))
-    #ax.bar(data2.keys(), data2.values())
-    #ax.set_title('Sessions')
-    #ax.legend(loc='upper left')
-    #ax.set_ylabel('Field size')
-    #ax.set_xlim(xmin=yrs[0], xmax=yrs[-1])
-
+        avgs_wends = [d['avg_field'] for d in races_per_day]
+        times_wends = [d['time'] for d in races_per_day]
+        if len(avgs_wends) == 1:
+            #x.add_column(times_wends, avgs_wends)
+            continue
+        else:
+            for i in range(len(avgs_wends)):
+                time2 = times_wends[i].strftime('%H:%M')
+                summed_field = avgs_wends[i]
+                x.add_row([time2, summed_field])
+    #plt.bar(range(len(times_wends)), avgs_wends, align='center')
+    #plt.xticks(range(len(avgs_wends)), times_wends)
+    #plt.show()
+    print(x)
     print("Finnished")
 
 
