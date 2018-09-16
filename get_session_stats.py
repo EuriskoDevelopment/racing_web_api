@@ -1,15 +1,10 @@
 import argparse as ap
 import time
 import datetime
-
 import matplotlib.pyplot as plt
 from ir_webstats.client import iRWebStats
 from copy import deepcopy as dp
-import matplotlib.dates as mdates
-from ir_webstats.util import *
-
 from prettytable import PrettyTable
-
 
 if __name__ == '__main__':
 
@@ -40,7 +35,8 @@ if __name__ == '__main__':
     print(st)
 
     #results = irw.results_archive(irw.custid)
-
+    x = PrettyTable()
+    x.field_names = ["Day", "Time", "Field size"]
 
     def get_data(road_serie):
         total = []
@@ -123,20 +119,50 @@ if __name__ == '__main__':
                   serie['licenseEligible'] is True and serie['category'] == 2] #2 is actual road
     data = get_data(road_serie2)
     print('all data recieved. Start processing')
-    data2 = data[0]['weekly_data']
-    thuesday_data_time = [time for weekday, time, field_size in data2 if weekday == 1]
-    thuesday_data_field_size = [time for weekday, time, field_size in data2 if weekday == 1]
+    data2 = data[6]['weekly_data']
+    #thuesday_data_time = [time for weekday, time, field_size in data2]
+    #thuesday_data_field_size = [field_size.items() for weekday, time, field_size in data2]
 
-    data_set, i = set(thuesday_data_time)
+    times2 = [d['time'] for d in data2 if d['weekday'] == 2]
+    mondays = [d for d in data2 if d['weekday'] == 0]
+    thuesdays = [d for d in data2 if d['weekday'] == 1]
+    wendsdays = [d for d in data2 if d['weekday'] == 2]
+    thursdays = [d for d in data2 if d['weekday'] == 3]
+    fridays = [d for d in data2 if d['weekday'] == 4]
+    saturdays = [d for d in data2 if d['weekday'] == 5]
+    sundays = [d for d in data2 if d['weekday'] == 6]
 
-    #for i in range(monday_data_time):
-        #if
+    times = set(times2)
+    pp = []
+    for i in range(0,7):
+        ppp = []
+        for time in times:
+            jj = {}
+            dd = [d for d in data2 if d['weekday'] == i and d['time'] == time]
+            if len(dd) > 0:
+                kk = [oo['field_size'] for oo in dd]
+                num_field = len(kk)
+                #if num_field > 1:
+                #    print('larger than one')
+                sum_field = sum(kk)
+                #jj['weekday'] = i
+                jj['time'] = time
+                jj['avg_field'] = sum_field
+                ppp.append(jj)
+        pp.append(ppp)
 
+    #print('hej')
 
+    #sorted(pp, key=lambda x: datetime.datetime.strptime(x['time'], '%h:%m:%s'))
+    serie_2 = pp[2]
+    for races_per_day in pp:
+        races_per_day.sort(key=lambda item: item['time'], reverse=True)
 
+    avgs_wends = [d['avg_field'] for d in pp[2]]
+    times_wends = [d['time'] for d in pp[2]]
 
-    plt.bar(range(len(data2)), list(data2.values()), align='center')
-    plt.xticks(range(len(data2)), list(data2.keys()))
+    plt.bar(range(len(times_wends)), avgs_wends, align='center')
+    plt.xticks(range(len(avgs_wends)), times_wends)
     plt.show()
     #sizey = [xx['field_size'] for xx in data[0]['weekly_data']]
     #times = [xx['start_time'] for xx in data[0]['weekly_data']]
