@@ -1,13 +1,12 @@
 import argparse as ap
 import time
 import datetime
-import matplotlib.pyplot as plt
 from ir_webstats.client import iRWebStats
 from copy import deepcopy as dp
 from prettytable import PrettyTable
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = ap.ArgumentParser(description="Shell interface for iRWebStats")
     parser.add_argument("-u", "--user", help='iRacing user', required=False)
     parser.add_argument("-p", "--passw", help='iRacing password', required=False)
@@ -26,13 +25,6 @@ if __name__ == '__main__':
         print(
             "Couldn't log in to iRacing Membersite. Please check your credentials")
         exit()
-
-    print("Succes login")
-
-    current_time_ts = time.time()
-    print("Current time is: ")
-    st = datetime.datetime.fromtimestamp(current_time_ts).strftime('%Y-%m-%d %H:%M:%S')
-    print(st)
 
     def get_data(road_serie):
         # Get data from URL adress to iracing
@@ -80,17 +72,16 @@ if __name__ == '__main__':
         print(serie_data['serie_name'])
 
         # get all time. Using Wendsday as reference
-        times2 = [d['time'] for d in weekly_data if d['weekday'] == 2]
-        times = set(times2)
-
         summed_field_size = []
+        all_times = [d['time'] for d in weekly_data]
+        times = list(set(all_times))
+        times.sort()
         for i in range(0,7):
             summed_field_size_per_day = []
             for time in times:
                 field_size_per_time = {}
                 dd = [d for d in weekly_data if d['weekday'] == i and d['time'] == time]
                 if len(dd) > 0:
-
                     kk = [oo['field_size'] for oo in dd]
                     num_field = len(kk)
                     sum_field = sum(kk)
@@ -98,30 +89,35 @@ if __name__ == '__main__':
                     field_size_per_time['time'] = time
                     field_size_per_time['total_field'] = sum_field
                     summed_field_size_per_day.append(field_size_per_time)
+                else:
+                    field_size_per_time['weekday'] = i
+                    field_size_per_time['time'] = time
+                    field_size_per_time['total_field'] = 0
+                    summed_field_size_per_day.append(field_size_per_time)
             summed_field_size.append(summed_field_size_per_day)
 
-        for races_per_day in summed_field_size:
-            x = PrettyTable()
-            x.field_names = ["Weekday", "Time", "Field size"]
+        y = PrettyTable()
+        column_names = ["Time", "Monday", "Thuesday", "Wendsday", "Thursday",
+                        "Friday", "Saturday", "Sunday"]
+        y.add_column(column_names[0], times)
+        for races_per_day in summed_field_size: #For each day
             if len(races_per_day) == 0:
                 continue
-            races_per_day.sort(key=lambda item: item['time'], reverse=True)
-
-            avgs_wends = [d['total_field'] for d in races_per_day]
-            times_wends = [d['time'] for d in races_per_day]
+            total_field_per_day = [d['total_field'] for d in races_per_day]
+            time_per_day = [d['time'].strftime('%H:%M') for d in races_per_day]
             weekdays = [d['weekday'] for d in races_per_day]
-            if len(avgs_wends) == 1:
-                print(len(avgs_wends))
-                print(" ++++++++ ++++++++++ +++++++++ ")
-                continue
+            y.add_column(column_names[weekdays[0]+1], total_field_per_day)
+            if len(time_per_day) == 0:
+                time2 = time_per_day
+                summed_field = total_field_per_day
+                weekday = weekdays
             else:
-                for i in range(len(avgs_wends)):
-                    time2 = times_wends[i].strftime('%H:%M')
-                    summed_field = avgs_wends[i]
+                for i in range(len(total_field_per_day)):
+                    time2 = time_per_day[i]
+                    summed_field = total_field_per_day[i]
                     weekday = weekdays[i]
-                    x.add_row([weekday, time2, summed_field])
-            print(x)
 
+        print(y)
         print("Finnished")
 
 
