@@ -6,6 +6,7 @@ from copy import deepcopy as dp
 from prettytable import PrettyTable
 
 
+
 if __name__ == '__main__':
     parser = ap.ArgumentParser(description="Shell interface for iRWebStats")
     parser.add_argument("-u", "--user", help='iRacing user', required=False)
@@ -72,77 +73,72 @@ if __name__ == '__main__':
     print(st)
 
     print('all data recieved. Start processing')
+    filename = 'racing_stat' + '.html'
+    with open(filename, 'w') as f:
+        for serie_data in series_data:
+            weekly_data = serie_data['weekly_data']
+            print(serie_data['serie_name'])
+            f.write('\n Race session data for {serie_name}'.format(
+                serie_name=serie_data['serie_name']))
+            # get all time. Using Wendsday as reference
+            summed_field_size = []
+            all_times = [d['time'] for d in weekly_data]
+            times = list(set(all_times))
+            all_raceweeks = [d['raceweek'] for d in weekly_data]
+            unique_raceweeks = list(set(all_raceweeks))
+            times.sort()
+            for i in range(0,7):
+                summed_field_size_per_day = []
+                for time in times:
+                    sum_field_size = 0
+                    for raceweek in unique_raceweeks:
+                        field_size_per_time = {}
+                        session_at_time_and_day = [d for d in weekly_data if d['weekday'] == i and
+                                                   d['time'] == time and d['raceweek'] == raceweek]
+                        if len(session_at_time_and_day) > 0:
+                            field_sizes = [oo['field_size'] for oo in session_at_time_and_day]
+                            #num_field = len(field_sizes)
+                            sum_field = sum(field_sizes)
+                            field_size = sum_field
+                        else:
+                            field_size = 0
+                        sum_field_size += field_size
 
-    for serie_data in series_data:
-        weekly_data = serie_data['weekly_data']
-        print(serie_data['serie_name'])
-
-        # get all time. Using Wendsday as reference
-        summed_field_size = []
-        all_times = [d['time'] for d in weekly_data]
-        times = list(set(all_times))
-        all_raceweeks = [d['raceweek'] for d in weekly_data]
-        unique_raceweeks = list(set(all_raceweeks))
-        #times.sort()
-        for i in range(0,7):
-            summed_field_size_per_day = []
-            for time in times:
-                #for raceweek in unique_raceweeks:
-                field_size_per_time = {}
-                session_at_time_and_day = [d for d in weekly_data if d['weekday'] == i and
-                                               d['time'] == time]
-                #print(len(dd))
-                #nbr_of_valid_weeks = len(dd)
-                if len(session_at_time_and_day) > 0:
-                    field_sizes = [oo['field_size'] for oo in session_at_time_and_day]
-                    #raceweeks = [oo['race_week'] for oo in session_at_time_and_day]
-                    #unique_raceweeks = list(set(raceweeks))
-                    #for race_week in unique_raceweeks:
-
-                    num_field = 1 #len(field_sizes)
-                    sum_field = sum(field_sizes)
                     field_size_per_time['weekday'] = i
                     field_size_per_time['time'] = time
-                    #field_size_per_time['raceweek'] = raceweek
                     field_size_per_time['total_field'] = \
-                            int(round(sum_field / num_field))
+                        int(round(sum_field_size) / len(unique_raceweeks))
                     summed_field_size_per_day.append(field_size_per_time)
+
+                summed_field_size.append(summed_field_size_per_day)
+
+            y = PrettyTable()
+            column_names = ["Time", "Monday", "Thuesday", "Wendsday", "Thursday",
+                            "Friday", "Saturday", "Sunday"]
+            y.add_column(column_names[0], times)
+            for races_per_day in summed_field_size: #For each day
+                if len(races_per_day) == 0:
+                    continue
+                total_field_per_day = [d['total_field'] for d in races_per_day]
+                time_per_day = [d['time'].strftime('%H:%M') for d in races_per_day]
+                weekdays = [d['weekday'] for d in races_per_day]
+                y.add_column(column_names[weekdays[0]+1], total_field_per_day)
+                if len(time_per_day) == 0:
+                    time2 = time_per_day
+                    summed_field = total_field_per_day
+                    weekday = weekdays
                 else:
-                    field_size_per_time['weekday'] = i
-                    #field_size_per_time['raceweek'] = raceweek
-                    field_size_per_time['time'] = time
-                    field_size_per_time['total_field'] = 0
+                    for i in range(len(total_field_per_day)):
+                        time2 = time_per_day[i]
+                        summed_field = total_field_per_day[i]
+                        weekday = weekdays[i]
 
-                    summed_field_size_per_day.append(field_size_per_time)
-            summed_field_size.append(summed_field_size_per_day)
-
-        y = PrettyTable()
-        column_names = ["Time", "Monday", "Thuesday", "Wendsday", "Thursday",
-                        "Friday", "Saturday", "Sunday"]
-        y.add_column(column_names[0], times)
-        for races_per_day in summed_field_size: #For each day
-            if len(races_per_day) == 0:
-                continue
-            total_field_per_day = [d['total_field'] for d in races_per_day]
-            time_per_day = [d['time'].strftime('%H:%M') for d in races_per_day]
-            weekdays = [d['weekday'] for d in races_per_day]
-            y.add_column(column_names[weekdays[0]+1], total_field_per_day)
-            if len(time_per_day) == 0:
-                time2 = time_per_day
-                summed_field = total_field_per_day
-                weekday = weekdays
-            else:
-                for i in range(len(total_field_per_day)):
-                    #for j in unique_raceweeks:
-                        #loop through each raceweek and sum nbr of participances
-
-                    time2 = time_per_day[i]
-                    summed_field = total_field_per_day[i]
-                    weekday = weekdays[i]
-
-        print(y)
-
+            print(y)
+            f.write(y.get_html_string())
+            f.write('\n')
     print("Complete")
+
+
 
 
 
