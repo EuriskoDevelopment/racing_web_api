@@ -6,6 +6,8 @@ from ir_webstats.client import iRWebStats
 from ir_webstats.util import *
 
 from prettytable import PrettyTable
+from unidecode import  unidecode
+from urllib.parse import unquote
 
 
 if __name__ == '__main__':
@@ -47,7 +49,7 @@ if __name__ == '__main__':
 
     def print_serie(series):
         x = PrettyTable()
-        x.field_names = ["Racing serie", "Track", "Next session"]
+        x.field_names = ["Racing serie", "Track", "Next session", "Num registred"]
 
         for serie in series:
             name = serie['seriesname']
@@ -67,15 +69,15 @@ if __name__ == '__main__':
                 continue
 
             next_session_time = next_racing_sessions[0]['6']
-
+            num_registered = next_racing_sessions[0]['14']
             next_sessiont_time_string = \
                 datetime.datetime.fromtimestamp(next_session_time / 1e3).strftime('%Y-%m-%d %H:%M:%S')
 
             current_week = serie['raceweek']
-            tracks = serie['tracks']
+            tracks = unidecode(unquote(serie['tracks'])) # To avoid special ascii chars
             current_track = tracks[current_week-1]['name']
 
-            x.add_row([name, current_track, next_sessiont_time_string])
+            x.add_row([name, current_track, next_sessiont_time_string, num_registered])
 
         print(x)
 

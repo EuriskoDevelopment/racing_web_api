@@ -52,6 +52,7 @@ if __name__ == '__main__':
                     data['weekday'] = session_weekday # 0=Monday, 1=Thuesday etc.
                     data['time'] = session_time
                     data['field_size'] = field_size
+                    data['raceweek'] = race_week
 
                     weekly_data.append(dp(data))
             serie_data['weekly_data'] = weekly_data
@@ -65,6 +66,11 @@ if __name__ == '__main__':
                   serie['licenseEligible'] is True and serie['category'] == 2]
     series_data = get_data(road_serie)
 
+    current_time_ts = time.time()
+    print("Current time is: ")
+    st = datetime.datetime.fromtimestamp(current_time_ts).strftime('%Y-%m-%d %H:%M:%S')
+    print(st)
+
     print('all data recieved. Start processing')
 
     for serie_data in series_data:
@@ -75,24 +81,38 @@ if __name__ == '__main__':
         summed_field_size = []
         all_times = [d['time'] for d in weekly_data]
         times = list(set(all_times))
-        times.sort()
+        all_raceweeks = [d['raceweek'] for d in weekly_data]
+        unique_raceweeks = list(set(all_raceweeks))
+        #times.sort()
         for i in range(0,7):
             summed_field_size_per_day = []
             for time in times:
+                #for raceweek in unique_raceweeks:
                 field_size_per_time = {}
-                dd = [d for d in weekly_data if d['weekday'] == i and d['time'] == time]
-                if len(dd) > 0:
-                    kk = [oo['field_size'] for oo in dd]
-                    num_field = len(kk)
-                    sum_field = sum(kk)
+                session_at_time_and_day = [d for d in weekly_data if d['weekday'] == i and
+                                               d['time'] == time]
+                #print(len(dd))
+                #nbr_of_valid_weeks = len(dd)
+                if len(session_at_time_and_day) > 0:
+                    field_sizes = [oo['field_size'] for oo in session_at_time_and_day]
+                    #raceweeks = [oo['race_week'] for oo in session_at_time_and_day]
+                    #unique_raceweeks = list(set(raceweeks))
+                    #for race_week in unique_raceweeks:
+
+                    num_field = 1 #len(field_sizes)
+                    sum_field = sum(field_sizes)
                     field_size_per_time['weekday'] = i
                     field_size_per_time['time'] = time
-                    field_size_per_time['total_field'] = sum_field
+                    #field_size_per_time['raceweek'] = raceweek
+                    field_size_per_time['total_field'] = \
+                            int(round(sum_field / num_field))
                     summed_field_size_per_day.append(field_size_per_time)
                 else:
                     field_size_per_time['weekday'] = i
+                    #field_size_per_time['raceweek'] = raceweek
                     field_size_per_time['time'] = time
                     field_size_per_time['total_field'] = 0
+
                     summed_field_size_per_day.append(field_size_per_time)
             summed_field_size.append(summed_field_size_per_day)
 
@@ -113,12 +133,16 @@ if __name__ == '__main__':
                 weekday = weekdays
             else:
                 for i in range(len(total_field_per_day)):
+                    #for j in unique_raceweeks:
+                        #loop through each raceweek and sum nbr of participances
+
                     time2 = time_per_day[i]
                     summed_field = total_field_per_day[i]
                     weekday = weekdays[i]
 
         print(y)
-        print("Finnished")
+
+    print("Complete")
 
 
 
