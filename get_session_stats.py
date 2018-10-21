@@ -27,6 +27,10 @@ if __name__ == '__main__':
             "Couldn't log in to iRacing Membersite. Please check your credentials")
         exit()
 
+    print("Current time is: ")
+    current_time = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    print(current_time)
+    season = ''
     def get_data(road_serie):
         # Get data from URL adress to iracing
         total = []
@@ -62,10 +66,14 @@ if __name__ == '__main__':
 
     season_stat = irw.all_seasons()
 
-    # get racing serie. 1=oval, 2=road, 3=dirt_oval, 4=dirt_road
-    road_serie = [serie for serie in season_stat if
-                  serie['licenseEligible'] is True and serie['category'] == 2]
-    series_data = get_data(road_serie)
+    season = season_stat[5]['seasonshortname']
+    print('season: {}'.format(season))
+    current_race_week = season_stat[5]['raceweek']
+    # get racing series data for road racing.
+    # 1=oval, 2=road, 3=dirt_oval, 4=dirt_road
+    road_series_stat = [serie for serie in season_stat if
+                        serie['licenseEligible'] is True and serie['category'] == 2]
+    series_data = get_data(road_series_stat)
 
     current_time_ts = time.time()
     print("Current time is: ")
@@ -75,10 +83,13 @@ if __name__ == '__main__':
     print('all data recieved. Start processing')
     filename = 'racing_stat' + '.html'
     with open(filename, 'w') as f:
+        f.write('Generated data at {current_time} for season {season}, '
+                'raceweek {raceweek} <br> '.format(
+                 current_time=current_time, season=season, raceweek=current_race_week))
         for serie_data in series_data:
             weekly_data = serie_data['weekly_data']
             print(serie_data['serie_name'])
-            f.write('\n Race session data for {serie_name}'.format(
+            f.write('\n Race session data for {serie_name} <br>'.format(
                 serie_name=serie_data['serie_name']))
             # get all time. Using Wendsday as reference
             summed_field_size = []
