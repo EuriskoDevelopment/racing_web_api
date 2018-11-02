@@ -3,12 +3,8 @@ import time
 import datetime
 
 from ir_webstats.client import iRWebStats
-from ir_webstats.util import *
-
 from prettytable import PrettyTable
-from unidecode import  unidecode
-from urllib.parse import unquote
-
+import urllib.parse as url
 
 if __name__ == '__main__':
 
@@ -53,7 +49,6 @@ if __name__ == '__main__':
 
         for serie in series:
             name = serie['seriesname']
-            #print(name)
             times = irw.session_times(serie['seasonid'], 0, 1000000)
             next_sessions = times['d']
 
@@ -74,8 +69,10 @@ if __name__ == '__main__':
                 datetime.datetime.fromtimestamp(next_session_time / 1e3).strftime('%Y-%m-%d %H:%M:%S')
 
             current_week = serie['raceweek']
-            tracks = unidecode(unquote(serie['tracks'])) # To avoid special ascii chars
-            current_track = tracks[current_week-1]['name']
+            tracks = serie['tracks']
+
+            #unquote to fix diacritics (å,ä,ö, etc.)
+            current_track = url.unquote_plus(tracks[current_week-1]['name'])
 
             x.add_row([name, current_track, next_sessiont_time_string, num_registered])
 

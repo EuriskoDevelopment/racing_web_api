@@ -6,7 +6,6 @@ from copy import deepcopy as dp
 from prettytable import PrettyTable
 
 
-
 if __name__ == '__main__':
     parser = ap.ArgumentParser(description="Shell interface for iRWebStats")
     parser.add_argument("-u", "--user", help='iRacing user', required=False)
